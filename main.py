@@ -2,6 +2,10 @@ import os
 import logging
 from contextlib import asynccontextmanager
 from typing import List, Optional
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 from fastapi import FastAPI, Depends, HTTPException, status, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -296,9 +300,15 @@ app = FastAPI(
 )
 
 # Enable CORS for frontend integration
+allowed_origins_env = os.getenv("ALLOWED_ORIGINS", "*")
+if allowed_origins_env == "*":
+    origins = ["*"]
+else:
+    origins = [o.strip() for o in allowed_origins_env.split(",") if o.strip()]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -874,3 +884,12 @@ def get_emergency_contacts():
         {"name": "Tele-MANAS Mental Health Support", "number": "14416", "service": "Free 24x7 National Psychological Counseling & Crisis Care", "icon": "heart-pulse-fill"},
         {"name": "National Poison Information Center", "number": "1800-116-117", "service": "Emergency Toxic Ingestion & Antidote Guidance", "icon": "capsule"}
     ]
+
+
+if __name__ == "__main__":
+    import uvicorn
+    # Render binds dynamically to the PORT environment variable
+    server_port = int(os.environ.get("PORT", 8000))
+    logger.info(f"Starting server on port {server_port} for Render deployment...")
+    uvicorn.run("main:app", host="0.0.0.0", port=server_port, reload=False)
+
